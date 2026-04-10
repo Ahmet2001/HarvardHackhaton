@@ -1,0 +1,30 @@
+### Health
+GET http://localhost:8000/api/health
+
+### Fetch a small PDB structure
+POST http://localhost:8000/api/proteins/fetch
+Content-Type: application/json
+
+{
+  "query": "1CRN"
+}
+
+### Store a SMILES ligand
+POST http://localhost:8000/api/ligands
+Content-Type: application/json
+
+{
+  "name": "Aspirin control",
+  "smiles": "CC(=O)OC1=CC=CC=C1C(=O)O",
+  "input_format": "smiles"
+}
+
+### Agent command
+POST http://localhost:8000/api/agent/message
+Content-Type: application/json
+
+{
+  "message": "Fetch PDB ID 1CRN",
+  "ligand_smiles": null
+}
+

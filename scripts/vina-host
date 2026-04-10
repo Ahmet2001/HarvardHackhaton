@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+exec flatpak-spawn --host vina "$@"

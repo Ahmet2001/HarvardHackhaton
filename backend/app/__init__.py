@@ -1,2 +1,2 @@
-"""Bıdık backend package."""
+"""BioDockX backend package."""
 

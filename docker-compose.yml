@@ -7,8 +7,8 @@ services:
       - .env.example
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      BIDIK_GEMINI_MODEL: ${BIDIK_GEMINI_MODEL:-gemini-2.5-flash}
-      BIDIK_ENABLE_GEMINI_AGENT: ${BIDIK_ENABLE_GEMINI_AGENT:-true}
+      BIODOCKX_GEMINI_MODEL: ${BIODOCKX_GEMINI_MODEL:-gemini-2.5-flash}
+      BIODOCKX_ENABLE_GEMINI_AGENT: ${BIODOCKX_ENABLE_GEMINI_AGENT:-true}
     ports:
       - "8000:8000"
     volumes:
@@ -20,9 +20,9 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        VITE_BIDIK_API_URL: http://localhost:8000
+        VITE_BIODOCKX_API_URL: http://localhost:8000
     environment:
-      - VITE_BIDIK_API_URL=http://localhost:8000
+      - VITE_BIODOCKX_API_URL=http://localhost:8000
     ports:
       - "5173:80"
     depends_on:

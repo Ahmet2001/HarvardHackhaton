@@ -40,7 +40,7 @@ class ReportService:
             for entry in job.logs
         )
         report_path.write_text(
-            f"""# Bıdık Docking Report
+            f"""# BioDockX Docking Report
 
 ## Protein
 - Name: {protein.name}

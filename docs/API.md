@@ -1,4 +1,4 @@
-# Bıdık API
+# BioDockX API
 
 The backend is a FastAPI application. Once running, interactive docs are available at:
 
@@ -130,4 +130,4 @@ Example response when no key is configured:
 
 Returns structured actions, updated session context, and any fetched protein, ligand, or job payloads.
 
-If `GEMINI_API_KEY` is set, the message first goes to the Gemini intent planner. Bıdık then executes the selected local workflow tools itself, so protein retrieval and docking status remain auditable.
+If `GEMINI_API_KEY` is set, the message first goes to the Gemini intent planner. BioDockX then executes the selected local workflow tools itself, so protein retrieval and docking status remain auditable.

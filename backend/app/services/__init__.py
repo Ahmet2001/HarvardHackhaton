@@ -1,2 +1,2 @@
-"""Service layer for Bıdık."""
+"""Service layer for BioDockX."""
 

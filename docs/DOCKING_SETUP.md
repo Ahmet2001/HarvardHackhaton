@@ -1,6 +1,6 @@
 # Docking Tool Setup
 
-Bıdık integrates with real command-line tools. It does not fabricate docking output.
+BioDockX integrates with real command-line tools. It does not fabricate docking output.
 
 Ligands can be stored from PubChem name lookup, pasted SMILES, uploaded MOL/MOL2/SDF files, or uploaded PDBQT files. PubChem lookup gives the app a convenient public source for SMILES, but it is not a substitute for curated ligand preparation.
 
@@ -12,8 +12,8 @@ Ligands can be stored from PubChem name lookup, pasted SMILES, uploaded MOL/MOL2
 Override paths with:
 
 ```bash
-export BIDIK_OBABEL_BINARY=/path/to/obabel
-export BIDIK_VINA_BINARY=/path/to/vina
+export BIODOCKX_OBABEL_BINARY=/path/to/obabel
+export BIODOCKX_VINA_BINARY=/path/to/vina
 ```
 
 ## What the MVP does

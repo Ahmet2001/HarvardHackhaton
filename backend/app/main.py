@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
     )
 
     app = FastAPI(
-        title="Bıdık API",
+        title="BioDockX API",
         version="0.1.0",
         description=(
             "AI-agent-powered bioinformatics MVP for protein retrieval, docking preparation, "

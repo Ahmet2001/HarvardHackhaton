@@ -66,7 +66,7 @@ function App() {
       <header className="app-header">
         <div>
           <p className="eyebrow">AI-assisted bioinformatics</p>
-          <h1>Bıdık</h1>
+          <h1>BioDockX</h1>
           <p>Protein retrieval, ligand setup, docking preparation, Vina runs, and traceable result review.</p>
         </div>
         <button

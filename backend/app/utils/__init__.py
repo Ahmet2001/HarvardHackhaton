@@ -1,2 +1,2 @@
-"""Utility helpers for Bıdık."""
+"""Utility helpers for BioDockX."""
 

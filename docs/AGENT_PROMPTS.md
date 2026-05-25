@@ -14,7 +14,7 @@
 - `Summarize the simulation results in simple language`
 - `List candidate ligands`
 
-If `GEMINI_API_KEY` is configured, Bıdık uses Gemini first to produce a structured workflow plan, then executes local tools through the deterministic router. If the key is missing or the planner fails, the router still maps these requests to tool calls and returns tool names and statuses in every agent response.
+If `GEMINI_API_KEY` is configured, BioDockX uses Gemini first to produce a structured workflow plan, then executes local tools through the deterministic router. If the key is missing or the planner fails, the router still maps these requests to tool calls and returns tool names and statuses in every agent response.
 
 Check planner status:
 

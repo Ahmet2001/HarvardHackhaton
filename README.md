@@ -1,6 +1,6 @@
-# Bıdık
+# BioDockX
 
-Bıdık is a production-minded MVP for an AI-agent-powered bioinformatics platform. It retrieves 3D protein structures from RCSB PDB, stores metadata locally, visualizes structures in the browser, prepares receptor and ligand inputs for molecular docking, runs AutoDock Vina when available, and reports workflow results through a structured UI and API.
+BioDockX is a production-minded MVP for an AI-agent-powered bioinformatics platform. It retrieves 3D protein structures from RCSB PDB, stores metadata locally, visualizes structures in the browser, prepares receptor and ligand inputs for molecular docking, runs AutoDock Vina when available, and reports workflow results through a structured UI and API.
 
 The project is intentionally honest about scientific execution. If Open Babel or AutoDock Vina is missing, docking jobs fail with actionable errors. The app does not fabricate scores.
 
@@ -99,8 +99,8 @@ To enable the LLM-backed agent planner, edit `.env`:
 
 ```bash
 GEMINI_API_KEY=your_api_key_here
-BIDIK_ENABLE_GEMINI_AGENT=true
-BIDIK_GEMINI_MODEL=gemini-2.5-flash
+BIODOCKX_ENABLE_GEMINI_AGENT=true
+BIODOCKX_GEMINI_MODEL=gemini-2.5-flash
 ```
 
 The real API key must stay in `.env` or your shell environment. It is ignored by git.
@@ -147,8 +147,8 @@ For full docking, install:
 Then set paths if needed:
 
 ```bash
-export BIDIK_OBABEL_BINARY=/path/to/obabel
-export BIDIK_VINA_BINARY=/path/to/vina
+export BIODOCKX_OBABEL_BINARY=/path/to/obabel
+export BIODOCKX_VINA_BINARY=/path/to/vina
 ```
 
 Without these binaries, protein retrieval and ligand storage still work. Preparation and docking jobs return failed statuses with explicit dependency messages.

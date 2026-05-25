@@ -281,7 +281,7 @@ class AgentOrchestrator:
             text = assistant_message.strip()
         elif is_casual_message(message):
             text = (
-                "Merhaba, ben Bıdık. Protein arama, ligand hazırlama ve docking akışında yardımcı olurum. "
+                "Merhaba, ben BioDockX. Protein arama, ligand hazırlama ve docking akışında yardımcı olurum. "
                 "İstersen direkt 'EGFR yapısını getir' ya da 'P53 fetch' diye yazabilirsin."
             )
         else:

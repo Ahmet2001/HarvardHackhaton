@@ -90,8 +90,8 @@ export function ChatPanel({
         role="log"
       >
         {messages.map((message, index) => (
-          <article aria-label={message.role === "user" ? "User message" : "Bıdık response"} className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>
-            <span>{message.role === "user" ? "You" : "Bıdık"}</span>
+          <article aria-label={message.role === "user" ? "User message" : "BioDockX response"} className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>
+            <span>{message.role === "user" ? "You" : "BioDockX"}</span>
             <p>{message.content}</p>
           </article>
         ))}
@@ -108,7 +108,7 @@ export function ChatPanel({
             rows={3}
           />
         </label>
-        <FieldHint id="command-help">Use natural language. Bıdık keeps the active protein, ligand, and last docking job in the current session.</FieldHint>
+        <FieldHint id="command-help">Use natural language. BioDockX keeps the active protein, ligand, and last docking job in the current session.</FieldHint>
         <label htmlFor="command-smiles">
           Optional SMILES for this command
           <input
@@ -120,7 +120,7 @@ export function ChatPanel({
           />
         </label>
         <FieldHint id="command-smiles-help">Paste a ligand only when the command needs one, such as "dock this protein with this ligand".</FieldHint>
-        <LoadingButton type="submit" busy={busy} busyLabel="Bıdık is working" disabled={!canSubmit}>
+        <LoadingButton type="submit" busy={busy} busyLabel="BioDockX is working" disabled={!canSubmit}>
           Send command
         </LoadingButton>
       </form>

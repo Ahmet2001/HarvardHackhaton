@@ -64,7 +64,7 @@ export function ProteinPanel({ protein, onProtein, fetchProtein, onError }: Prot
           Fetch
         </LoadingButton>
       </form>
-      <FieldHint id="protein-query-help">Search by a known PDB ID or use a gene/protein keyword and Bıdık will pick the best available structure.</FieldHint>
+      <FieldHint id="protein-query-help">Search by a known PDB ID or use a gene/protein keyword and BioDockX will pick the best available structure.</FieldHint>
       {message ? (
         <InlineNotice tone="success">
           <p>{message}</p>

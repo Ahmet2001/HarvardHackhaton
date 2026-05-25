@@ -82,7 +82,7 @@ class GeminiIntentPlanner:
             "last_job_id": context.last_job_id,
         }
         prompt = (
-            "You are the intent planner for Bıdık, an agentic bioinformatics workflow app.\n"
+            "You are the intent planner for BioDockX, an agentic bioinformatics workflow app.\n"
             "Return only JSON matching the schema. Do not claim scientific work has run.\n"
             "Be friendly and conversational for greetings or general chat: use intent 'chat' and write assistant_message.\n"
             "For workflow requests, choose tool intents and keep assistant_message null unless the user is only chatting.\n"

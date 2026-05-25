@@ -175,7 +175,7 @@ class DockingService:
     def _run_vina(self, job: DockingJob) -> None:
         if not binary_exists(self.settings.vina_binary):
             raise RuntimeError(
-                "AutoDock Vina is not installed or not on PATH. Install Vina and set BIDIK_VINA_BINARY "
+                "AutoDock Vina is not installed or not on PATH. Install Vina and set BIODOCKX_VINA_BINARY "
                 "if the executable has a custom location."
             )
         if not job.receptor_pdbqt or not job.ligand_pdbqt:

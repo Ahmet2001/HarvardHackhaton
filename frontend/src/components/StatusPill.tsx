@@ -2,7 +2,16 @@ type StatusPillProps = {
   status?: string;
 };
 
-export function StatusPill({ status = "idle" }: StatusPillProps) {
-  return <span className={`status-pill status-${status}`}>{status}</span>;
+function formatStatus(status: string) {
+  return status.replace(/_/g, " ");
 }
 
+export function StatusPill({ status = "idle" }: StatusPillProps) {
+  const label = formatStatus(status);
+
+  return (
+    <span aria-label={`Status: ${label}`} className={`status-pill status-${status}`} role="status">
+      {label}
+    </span>
+  );
+}

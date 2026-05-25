@@ -26,6 +26,12 @@ function loadNglScript(): Promise<void> {
   }
   const existing = document.getElementById(NGL_SCRIPT_ID) as HTMLScriptElement | null;
   if (existing) {
+    if (existing.dataset.state === "loaded") {
+      return window.NGL ? Promise.resolve() : Promise.reject(new Error("NGL Viewer failed to initialize."));
+    }
+    if (existing.dataset.state === "failed") {
+      return Promise.reject(new Error("NGL Viewer failed to load."));
+    }
     return new Promise((resolve, reject) => {
       existing.addEventListener("load", () => resolve(), { once: true });
       existing.addEventListener("error", () => reject(new Error("NGL Viewer failed to load.")), {
@@ -39,8 +45,14 @@ function loadNglScript(): Promise<void> {
     script.id = NGL_SCRIPT_ID;
     script.src = NGL_SRC;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("NGL Viewer failed to load."));
+    script.onload = () => {
+      script.dataset.state = "loaded";
+      resolve();
+    };
+    script.onerror = () => {
+      script.dataset.state = "failed";
+      reject(new Error("NGL Viewer failed to load."));
+    };
     document.head.appendChild(script);
   });
 }
@@ -50,18 +62,27 @@ type StructureViewerProps = {
   selectedChain?: string | null;
 };
 
+type ViewerState = {
+  message: string;
+  tone: "idle" | "loading" | "ready" | "error";
+};
+
 export function StructureViewer({ structureUrl, selectedChain }: StructureViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<InstanceType<NonNullable<typeof window.NGL>["Stage"]> | null>(null);
-  const [status, setStatus] = useState("No structure loaded");
+  const [viewerState, setViewerState] = useState<ViewerState>({
+    message: "No structure loaded",
+    tone: "idle"
+  });
 
   useEffect(() => {
     if (!structureUrl || !containerRef.current) {
+      setViewerState({ message: "No structure loaded", tone: "idle" });
       return;
     }
 
     let cancelled = false;
-    setStatus("Loading structure");
+    setViewerState({ message: "Loading structure", tone: "loading" });
     loadNglScript()
       .then(() => {
         if (!window.NGL || !containerRef.current || cancelled) {
@@ -90,11 +111,22 @@ export function StructureViewer({ structureUrl, selectedChain }: StructureViewer
               visible: true
             });
             component.autoView();
-            setStatus(selectedChain ? `Viewing chain ${selectedChain}` : "Structure ready");
+            setViewerState({
+              message: selectedChain ? `Viewing chain ${selectedChain}` : "Structure ready",
+              tone: "ready"
+            });
           })
-          .catch((error: Error) => setStatus(error.message));
+          .catch((error: Error) => {
+            if (!cancelled) {
+              setViewerState({ message: error.message, tone: "error" });
+            }
+          });
       })
-      .catch((error: Error) => setStatus(error.message));
+      .catch((error: Error) => {
+        if (!cancelled) {
+          setViewerState({ message: error.message, tone: "error" });
+        }
+      });
 
     const resize = () => stageRef.current?.handleResize();
     window.addEventListener("resize", resize);
@@ -112,15 +144,27 @@ export function StructureViewer({ structureUrl, selectedChain }: StructureViewer
   }, []);
 
   return (
-    <div className="viewer-shell">
+    <div aria-busy={viewerState.tone === "loading"} className={`viewer-shell viewer-${viewerState.tone}`}>
       <div className="viewer-toolbar">
-        <span>{status}</span>
-        <button type="button" onClick={() => stageRef.current?.autoView()} disabled={!structureUrl}>
+        <span aria-live="polite" role="status">{viewerState.message}</span>
+        <button type="button" onClick={() => stageRef.current?.autoView()} disabled={!structureUrl || viewerState.tone !== "ready"}>
           Reset view
         </button>
       </div>
-      <div className="structure-viewer" ref={containerRef} aria-label="3D protein structure viewer" />
+      {viewerState.tone === "error" ? (
+        <div className="viewer-fallback" role="alert">
+          <strong>Viewer unavailable</strong>
+          <p>{viewerState.message}</p>
+          {structureUrl ? <a href={structureUrl}>Download the PDB file instead</a> : null}
+        </div>
+      ) : null}
+      <div
+        aria-label={`3D protein structure viewer. ${viewerState.message}`}
+        className="structure-viewer"
+        ref={containerRef}
+        role="img"
+        tabIndex={0}
+      />
     </div>
   );
 }
-

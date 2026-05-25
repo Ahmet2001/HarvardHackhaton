@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../api";
 import type { DockingJob, LigandRecord, ProteinMetadata } from "../types";
+import { InlineNotice } from "./InlineNotice";
 import { StatusPill } from "./StatusPill";
 
 type ResultsPanelProps = {
@@ -8,21 +9,43 @@ type ResultsPanelProps = {
   job?: DockingJob;
 };
 
+type DownloadActionProps = {
+  enabled: boolean;
+  href: string;
+  label: string;
+};
+
+function DownloadAction({ enabled, href, label }: DownloadActionProps) {
+  if (!enabled) {
+    return (
+      <span aria-disabled="true" className="download-link disabled" role="link">
+        {label}
+      </span>
+    );
+  }
+
+  return (
+    <a className="download-link" href={href}>
+      {label}
+    </a>
+  );
+}
+
 export function ResultsPanel({ protein, ligand, job }: ResultsPanelProps) {
   const bestScore = job?.scores.length
     ? [...job.scores].sort((a, b) => a.affinity_kcal_mol - b.affinity_kcal_mol)[0]
     : undefined;
 
   return (
-    <section className="panel results-panel">
+    <section aria-labelledby="results-panel-title" className="panel results-panel">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Results</p>
-          <h2>Scores and report</h2>
+          <h2 id="results-panel-title">Scores and report</h2>
         </div>
         {job ? <StatusPill status={job.status} /> : null}
       </div>
-      <div className="summary-strip">
+      <div aria-label="Selected workflow summary" className="summary-strip">
         <div>
           <span>Protein</span>
           <strong>{protein ? `${protein.name} (${protein.pdb_id})` : "None selected"}</strong>
@@ -37,42 +60,40 @@ export function ResultsPanel({ protein, ligand, job }: ResultsPanelProps) {
         </div>
       </div>
       {job?.scores.length ? (
-        <table className="score-table">
-          <thead>
-            <tr>
-              <th>Mode</th>
-              <th>Affinity</th>
-              <th>RMSD lower</th>
-              <th>RMSD upper</th>
-            </tr>
-          </thead>
-          <tbody>
-            {job.scores.map((score) => (
-              <tr key={score.mode}>
-                <td>{score.mode}</td>
-                <td>{score.affinity_kcal_mol}</td>
-                <td>{score.rmsd_lb ?? "-"}</td>
-                <td>{score.rmsd_ub ?? "-"}</td>
+        <div aria-label="Docking scores table" className="table-scroll" tabIndex={0}>
+          <table className="score-table">
+            <caption>Ranked AutoDock Vina poses for the active protein and ligand.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Mode</th>
+                <th scope="col">Affinity (kcal/mol)</th>
+                <th scope="col">RMSD lower (Å)</th>
+                <th scope="col">RMSD upper (Å)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {job.scores.map((score) => (
+                <tr key={score.mode}>
+                  <td>{score.mode}</td>
+                  <td>{score.affinity_kcal_mol.toFixed(2)}</td>
+                  <td>{score.rmsd_lb?.toFixed(2) ?? "-"}</td>
+                  <td>{score.rmsd_ub?.toFixed(2) ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
-        <p className="empty-state">
-          {job?.error ? job.error : "Docking scores will appear after a successful Vina run."}
-        </p>
+        <InlineNotice tone={job?.status === "failed" ? "error" : "info"}>
+          <p>{job?.error ? job.error : "Docking scores will appear after a successful Vina run."}</p>
+        </InlineNotice>
       )}
       {job ? (
         <div className="action-row">
-          <a className={job.report_path ? "download-link" : "download-link disabled"} href={`${API_BASE_URL}/api/docking/jobs/${job.id}/report`}>
-            Download report
-          </a>
-          <a className={job.output_pdbqt ? "download-link" : "download-link disabled"} href={`${API_BASE_URL}/api/docking/jobs/${job.id}/poses`}>
-            Download poses
-          </a>
+          <DownloadAction enabled={Boolean(job.report_path)} href={`${API_BASE_URL}/api/docking/jobs/${job.id}/report`} label="Download report" />
+          <DownloadAction enabled={Boolean(job.output_pdbqt)} href={`${API_BASE_URL}/api/docking/jobs/${job.id}/poses`} label="Download poses" />
         </div>
       ) : null}
     </section>
   );
 }
-

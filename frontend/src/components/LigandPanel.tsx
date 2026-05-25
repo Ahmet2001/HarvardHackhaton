@@ -1,6 +1,9 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { API_BASE_URL } from "../api";
 import type { LigandRecord, LigandSearchResult } from "../types";
+import { FieldHint } from "./FieldHint";
+import { InlineNotice } from "./InlineNotice";
+import { LoadingButton } from "./LoadingButton";
 
 type LigandPanelProps = {
   ligand?: LigandRecord;
@@ -11,6 +14,8 @@ type LigandPanelProps = {
   uploadLigand: (file: File) => Promise<LigandRecord>;
   onError: (message: string) => void;
 };
+
+type BusyAction = "search" | "store" | "upload" | "import" | null;
 
 export function LigandPanel({
   ligand,
@@ -25,14 +30,17 @@ export function LigandPanel({
   const [smiles, setSmiles] = useState("");
   const [lookupName, setLookupName] = useState("");
   const [lookupResults, setLookupResults] = useState<LigandSearchResult[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<BusyAction>(null);
+  const [importingCid, setImportingCid] = useState<number | null>(null);
+
+  const busy = busyAction !== null;
 
   async function submitSmiles(event: FormEvent) {
     event.preventDefault();
     if (!smiles.trim()) {
       return;
     }
-    setBusy(true);
+    setBusyAction("store");
     try {
       const created = await createLigand(name || "SMILES ligand", smiles);
       onLigand(created);
@@ -41,7 +49,7 @@ export function LigandPanel({
     } catch (error) {
       onError(error instanceof Error ? error.message : "Ligand creation failed.");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -50,14 +58,14 @@ export function LigandPanel({
     if (!file) {
       return;
     }
-    setBusy(true);
+    setBusyAction("upload");
     try {
       const created = await uploadLigand(file);
       onLigand(created);
     } catch (error) {
       onError(error instanceof Error ? error.message : "Ligand upload failed.");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
       event.target.value = "";
     }
   }
@@ -67,7 +75,7 @@ export function LigandPanel({
     if (!lookupName.trim()) {
       return;
     }
-    setBusy(true);
+    setBusyAction("search");
     try {
       const results = await searchLigands(lookupName);
       setLookupResults(results);
@@ -77,12 +85,13 @@ export function LigandPanel({
     } catch (error) {
       onError(error instanceof Error ? error.message : "Ligand lookup failed.");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
-  async function importByName(nameToImport: string) {
-    setBusy(true);
+  async function importByName(nameToImport: string, cid: number) {
+    setBusyAction("import");
+    setImportingCid(cid);
     try {
       const created = await lookupLigand(nameToImport);
       onLigand(created);
@@ -91,80 +100,106 @@ export function LigandPanel({
     } catch (error) {
       onError(error instanceof Error ? error.message : "Ligand import failed.");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
+      setImportingCid(null);
     }
   }
 
+  const canSearch = lookupName.trim().length > 0 && !busy;
+  const canStoreSmiles = smiles.trim().length > 0 && !busy;
+
   return (
-    <section className="panel ligand-panel">
+    <section aria-labelledby="ligand-panel-title" className="panel ligand-panel">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Ligand</p>
-          <h2>Input and preparation</h2>
+          <h2 id="ligand-panel-title">Input and preparation</h2>
         </div>
       </div>
       <form className="stack-form" onSubmit={searchByName}>
-        <label>
+        <label htmlFor="ligand-lookup">
           Drug or ligand name
           <input
+            aria-describedby="ligand-lookup-help"
+            autoComplete="off"
+            id="ligand-lookup"
             value={lookupName}
             onChange={(event) => setLookupName(event.target.value)}
             placeholder="aspirin, imatinib, caffeine"
           />
         </label>
-        <button type="submit" disabled={busy}>
+        <FieldHint id="ligand-lookup-help">Search PubChem, review the candidates, then import the intended ligand for docking.</FieldHint>
+        <LoadingButton type="submit" busy={busyAction === "search"} busyLabel="Searching PubChem" disabled={!canSearch}>
           Search PubChem
-        </button>
+        </LoadingButton>
       </form>
       {lookupResults.length ? (
-        <div className="ligand-results">
+        <ul aria-label="PubChem ligand search results" className="ligand-results">
           {lookupResults.slice(0, 5).map((result) => (
-            <div className="ligand-result" key={result.cid}>
+            <li className="ligand-result" key={result.cid}>
               <div>
                 <span>PubChem CID {result.cid}</span>
                 <strong>{result.name}</strong>
                 <p>{result.molecular_formula ?? "Formula not listed"} · {result.molecular_weight ?? "MW not listed"}</p>
                 <code>{result.smiles}</code>
+                <a href={result.source_url} rel="noreferrer" target="_blank">
+                  View PubChem record
+                </a>
               </div>
-              <button type="button" disabled={busy} onClick={() => importByName(result.name)}>
+              <LoadingButton
+                aria-label={`Use ${result.name} as the active ligand`}
+                type="button"
+                busy={importingCid === result.cid}
+                busyLabel="Importing ligand"
+                disabled={busy}
+                onClick={() => importByName(result.name, result.cid)}
+              >
                 Use ligand
-              </button>
-            </div>
+              </LoadingButton>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : null}
       <form className="stack-form" onSubmit={submitSmiles}>
-        <label>
+        <label htmlFor="ligand-name">
           Ligand name
-          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Aspirin control" />
+          <input id="ligand-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Aspirin control" />
         </label>
-        <label>
+        <label htmlFor="ligand-smiles">
           SMILES
           <textarea
+            aria-describedby="ligand-smiles-help"
+            id="ligand-smiles"
             value={smiles}
             onChange={(event) => setSmiles(event.target.value)}
             placeholder="CC(=O)OC1=CC=CC=C1C(=O)O"
             rows={3}
           />
         </label>
-        <button type="submit" disabled={busy}>
+        <FieldHint id="ligand-smiles-help">Use canonical or isomeric SMILES. File uploads are still available for MOL, MOL2, SDF, PDBQT, SMI, or SMILES.</FieldHint>
+        <LoadingButton type="submit" busy={busyAction === "store"} busyLabel="Storing ligand" disabled={!canStoreSmiles}>
           Store SMILES ligand
-        </button>
+        </LoadingButton>
       </form>
-      <label className="upload-box">
-        Upload MOL, MOL2, SDF, PDBQT, SMI, or SMILES
-        <input type="file" onChange={handleUpload} accept=".mol,.mol2,.sdf,.pdbqt,.smi,.smiles" />
+      <label aria-busy={busyAction === "upload"} className="upload-box" htmlFor="ligand-upload">
+        <span>{busyAction === "upload" ? "Uploading ligand file" : "Upload ligand file"}</span>
+        <small>MOL, MOL2, SDF, PDBQT, SMI, or SMILES are accepted.</small>
+        <input id="ligand-upload" type="file" onChange={handleUpload} accept=".mol,.mol2,.sdf,.pdbqt,.smi,.smiles" disabled={busy} />
       </label>
       {ligand ? (
-        <div className="summary-block">
+        <div aria-live="polite" className="summary-block">
           <span>Active ligand</span>
           <strong>{ligand.name}</strong>
           <p>{ligand.input_format.toUpperCase()}</p>
           {ligand.smiles ? <code>{ligand.smiles}</code> : null}
-          <a href={`${API_BASE_URL}/api/ligands/${ligand.id}/download`}>Download ligand file</a>
+          <a className="download-link secondary-link" href={`${API_BASE_URL}/api/ligands/${ligand.id}/download`}>
+            Download ligand file
+          </a>
         </div>
       ) : (
-        <p className="empty-state">Add a ligand before running docking.</p>
+        <InlineNotice>
+          <p>Add a ligand before running docking.</p>
+        </InlineNotice>
       )}
     </section>
   );

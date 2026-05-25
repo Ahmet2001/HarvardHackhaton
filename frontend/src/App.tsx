@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
 import { ChatPanel } from "./components/ChatPanel";
 import { DockingPanel } from "./components/DockingPanel";
+import { InlineNotice } from "./components/InlineNotice";
 import { LigandPanel } from "./components/LigandPanel";
 import { ProteinPanel } from "./components/ProteinPanel";
 import { ResultsPanel } from "./components/ResultsPanel";
@@ -26,15 +27,22 @@ function App() {
   const [ligand, setLigand] = useState<LigandRecord | undefined>();
   const [job, setJob] = useState<DockingJob | undefined>();
   const [parameters, setParameters] = useState<DockingParameters>(defaultParameters);
-  const [apiStatus, setApiStatus] = useState("checking");
+  const [apiStatus, setApiStatus] = useState<"checking" | "online" | "offline">("checking");
   const [error, setError] = useState<string | undefined>();
 
-  useEffect(() => {
+  const checkApiStatus = useCallback(() => {
+    setApiStatus("checking");
     api
       .health()
       .then(() => setApiStatus("online"))
       .catch(() => setApiStatus("offline"));
   }, []);
+
+  useEffect(() => {
+    checkApiStatus();
+    const interval = window.setInterval(checkApiStatus, 15000);
+    return () => window.clearInterval(interval);
+  }, [checkApiStatus]);
 
   function handleAgentResponse(response: AgentResponse) {
     setSessionId(response.session_id);
@@ -51,26 +59,34 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" id="workspace">
+      <a className="skip-link" href="#command-input">
+        Skip to agent command
+      </a>
       <header className="app-header">
         <div>
           <p className="eyebrow">AI-assisted bioinformatics</p>
           <h1>Bıdık</h1>
-          <p>Retrieve protein structures, prepare docking inputs, run Vina, and review traceable outputs.</p>
+          <p>Protein retrieval, ligand setup, docking preparation, Vina runs, and traceable result review.</p>
         </div>
-        <div className={`api-indicator ${apiStatus}`}>
-          <span />
+        <button
+          aria-label={`API status: ${apiStatus}. Click to recheck.`}
+          aria-live="polite"
+          className={`api-indicator ${apiStatus}`}
+          onClick={checkApiStatus}
+          type="button"
+        >
+          <span aria-hidden="true" />
           API {apiStatus}
-        </div>
+        </button>
       </header>
       {error ? (
-        <div className="error-banner" role="alert">
-          <strong>Workflow notice</strong>
+        <InlineNotice className="error-banner" title="Workflow notice" tone="error">
           <p>{error}</p>
-          <button type="button" onClick={() => setError(undefined)}>
+          <button className="button button-danger button-compact" type="button" onClick={() => setError(undefined)}>
             Dismiss
           </button>
-        </div>
+        </InlineNotice>
       ) : null}
       <div className="dashboard-grid">
         <ChatPanel

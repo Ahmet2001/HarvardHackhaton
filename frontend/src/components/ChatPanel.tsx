@@ -1,4 +1,6 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { FieldHint } from "./FieldHint";
+import { LoadingButton } from "./LoadingButton";
 import type { AgentResponse, DockingParameters } from "../types";
 
 type ChatMessage = {
@@ -26,15 +28,22 @@ export function ChatPanel({
   onError,
   sendMessage
 }: ChatPanelProps) {
+  const logRef = useRef<HTMLDivElement | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "agent",
-      content: "Tell me what to do: fetch a protein, add a ligand, prepare docking, or summarize results."
+      content: "Tell me what you want to do. For example: fetch EGFR, use aspirin as the ligand, prepare docking, or summarize results."
     }
   ]);
   const [draft, setDraft] = useState("");
   const [ligandSmiles, setLigandSmiles] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -59,46 +68,62 @@ export function ChatPanel({
     }
   }
 
+  const canSubmit = draft.trim().length > 0 && !busy;
+
   return (
-    <section className="panel command-panel">
+    <section aria-labelledby="agent-panel-title" className="panel command-panel">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Agent command</p>
-          <h2>Natural language workflow</h2>
+          <h2 id="agent-panel-title">Natural language workflow</h2>
         </div>
-        <span className="session-chip">{sessionId ? sessionId : "new session"}</span>
+        <span className="session-chip" title={sessionId ? `Active session ${sessionId}` : "A session starts after the first command"}>
+          {sessionId ? sessionId : "new session"}
+        </span>
       </div>
-      <div className="chat-log" aria-live="polite">
+      <div
+        aria-busy={busy}
+        aria-live="polite"
+        aria-relevant="additions text"
+        className="chat-log"
+        ref={logRef}
+        role="log"
+      >
         {messages.map((message, index) => (
-          <div className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>
+          <article aria-label={message.role === "user" ? "User message" : "Bıdık response"} className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>
             <span>{message.role === "user" ? "You" : "Bıdık"}</span>
             <p>{message.content}</p>
-          </div>
+          </article>
         ))}
       </div>
       <form className="chat-form" onSubmit={submit}>
-        <label>
+        <label htmlFor="command-input">
           Command
           <textarea
+            aria-describedby="command-help"
+            id="command-input"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Fetch the 3D structure of EGFR"
             rows={3}
           />
         </label>
-        <label>
+        <FieldHint id="command-help">Use natural language. Bıdık keeps the active protein, ligand, and last docking job in the current session.</FieldHint>
+        <label htmlFor="command-smiles">
           Optional SMILES for this command
           <input
+            aria-describedby="command-smiles-help"
+            id="command-smiles"
             value={ligandSmiles}
             onChange={(event) => setLigandSmiles(event.target.value)}
             placeholder="CC(=O)OC1=CC=CC=C1C(=O)O"
           />
         </label>
-        <button type="submit" disabled={busy}>
-          {busy ? "Working" : "Send command"}
-        </button>
+        <FieldHint id="command-smiles-help">Paste a ligand only when the command needs one, such as "dock this protein with this ligand".</FieldHint>
+        <LoadingButton type="submit" busy={busy} busyLabel="Bıdık is working" disabled={!canSubmit}>
+          Send command
+        </LoadingButton>
       </form>
     </section>
   );
 }
-
